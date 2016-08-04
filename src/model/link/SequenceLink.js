@@ -309,6 +309,12 @@ SequenceLink.prototype.setLinkCoordinates = function(interactor) {
                         seqDatum.end, seqDatum.uncertainEnd, fromMolecule, fyOffset);
                 highlightEndRes = seqDatum.uncertainEnd;
             }
+            if (isNumber(seqDatum.start) == false) {
+				uncertainGlyphPath += getPathSegments(triPointMid, ftMid,
+                        1, fromMolecule.size, fromMolecule, fyOffset);
+                highlightStartRes = 1;
+                highlightEndRes = fromMolecule.size;	
+			}
             highlightGlyphPath += getPathSegments(triPointMid, ftMid,
                     highlightStartRes, highlightEndRes, fromMolecule, fyOffset);
         }
@@ -327,7 +333,13 @@ SequenceLink.prototype.setLinkCoordinates = function(interactor) {
                         seqDatum.end, seqDatum.uncertainEnd, toMolecule, tyOffset);
                 highlightEndRes = seqDatum.uncertainEnd;
             }
-            highlightGlyphPath += getPathSegments(triPointMid, ttMid,
+            if (isNumber(seqDatum.start) == false) {
+				uncertainGlyphPath += getPathSegments(triPointMid, ttMid,
+                        1, toMolecule.size, toMolecule, tyOffset);
+                highlightStartRes = 1;
+                highlightEndRes = toMolecule.size;	
+			}
+			highlightGlyphPath += getPathSegments(triPointMid, ttMid,
                     highlightStartRes, highlightEndRes, toMolecule, tyOffset);
         }
 
