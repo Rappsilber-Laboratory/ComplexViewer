@@ -14,6 +14,7 @@ var xiNET = {}; //crosslinkviewer's javascript namespace
 //var RGBColor = require('rgbcolor');
 var d3 = require('d3');
 var colorbrewer = require('colorbrewer');
+var cola = require('webcola');
 var xiNET_Storage = require('./xiNET_Storage');
 var Annotation = require('../model/interactor/Annotation');
 var Molecule = require('../model/interactor/Molecule');
@@ -778,6 +779,58 @@ xiNET.Controller.prototype.setAllLinkCoordinates = function() {
 };
 
 xiNET.Controller.prototype.autoLayout = function() {
+            if (this.cola) {
+                this.cola.stop();
+            }
+            var nodes = this.molecules.values();
+
+            this.cola = cola.d3adaptor().avoidOverlaps(true).nodes(nodes);
+
+            var layoutLinks = new d3.map();
+            var links = this.allBinaryLinks.values();
+            var linkCount = links.length;
+            for (var l = 0; l < linkCount; l++) {
+                var link = links[l];
+                var fromMol = link.interactors[0];
+                var toMol = link.interactors[1];
+                var layoutLinkId = fromMol.id + "-" + toMol.id;
+                if (fromMol !== toMol && !layoutLinks.has(layoutLinkId)) {
+                    var linkObj = {};
+                    linkObj.source = fromMol;
+                    linkObj.target = toMol;
+                    linkObj.id = layoutLinkId;
+                    layoutLinks.set(layoutLinkId, linkObj);
+                }
+            }
+
+            var bBox = this.svgElement.getBoundingClientRect();
+            var width = bBox.width;
+            var height = bBox.height;
+            var k = 30;
+
+            var linkArr = layoutLinks.values();
+
+            this.cola.size([width, height]).links(linkArr);
+
+            var self = this;
+
+            this.cola.symmetricDiffLinkLengths(k).on("tick", function(e) {
+                var nodesArr = self.cola.nodes(); // these nodes are our RenderedProteins
+                var nCount = nodesArr.length;
+                for (var n = 0; n < nCount; n++) {
+                    var node = nodesArr[n];
+                    var offsetX = node.x;
+                    var offsetY = node.y;
+                    node.setPosition(offsetX, offsetY);
+                    //node.setAllLineCoordinates();
+                }
+                self.setAllLinkCoordinates();
+            });
+            this.cola.start(10, 15, 20);
+};
+
+/*
+xiNET.Controller.prototype.autoLayout = function() {
     if (typeof this.force !== 'undefined' && this.force != null) {
         this.force.stop();
     }
@@ -869,7 +922,7 @@ xiNET.Controller.prototype.autoLayout = function() {
         self.setAllLinkCoordinates();
     });
     this.force.start();
-};
+};*/
 
 xiNET.Controller.prototype.setAnnotations = function(annotationChoice) {
     this.annotationChoice = annotationChoice;
